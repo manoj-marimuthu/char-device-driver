@@ -1,6 +1,6 @@
 # Character Device Driver For Linux
 
-a driver that handles a virtual character device exposed at /dev/char_device.
+a Linux Driver that handles a virtual character device exposed at /dev/char_device.
 Written in c using linux kernel headers, it provides the following operations:
 
 ## Setup

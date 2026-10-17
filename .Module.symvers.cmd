@@ -1,0 +1,1 @@
+savedcmd_/home/vboxuser/char-device-driver/Module.symvers :=  scripts/mod/modpost -M -m       -o /home/vboxuser/char-device-driver/Module.symvers -n -T /home/vboxuser/char-device-driver/modules.order -i Module.symvers -e 
