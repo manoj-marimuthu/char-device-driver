@@ -59,8 +59,8 @@ echo "hello world" | sudo tee /dev/char_device
 
 ### Mutex lock
 
-For concurrent reads and writes, I have added protection using mutex
-locks.
+For concurrent reads and writes, I have used mutex locks to lock and release the
+buffer global variable.
 
 The future commits will address more character device driver features.
 
