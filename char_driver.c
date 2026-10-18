@@ -4,11 +4,13 @@
 #include<linux/uaccess.h>
 #include<linux/fs.h>
 #include<linux/device.h>
+#include<linux/mutex.h>
 
 #define BUFFER_SIZE 1024
 
 MODULE_AUTHOR("Manoj K M");
 
+static DEFINE_MUTEX(buffer_lock);
 static dev_t dev_no;
 static struct cdev char_cdev;
 static size_t data_len;
@@ -22,26 +24,37 @@ static int char_dev_open(struct inode* inode,struct file* file){
 static ssize_t char_dev_read(struct file* file, char __user *buf, size_t count,loff_t* offset){
 	size_t bytes,remaining;
 	size_t len = data_len;
+	if(mutex_lock_interruptible(&buffer_lock)){
+		return -ERESTARTSYS;
+	}
 	if(*offset >= len){
+		mutex_unlock(&buffer_lock);
 		return 0;
 	}
 	remaining = len - *offset;
 	bytes = min(count,remaining);
 	if(copy_to_user(buf,buffer + *offset,bytes)){
+		mutex_unlock(&buffer_lock);
 		return -EFAULT;
 	}
 	*offset += bytes;
+	mutex_unlock(&buffer_lock);
 	printk("Character device - read operation invoked by kernel \n");
 	return bytes;
 }
 
 static ssize_t char_dev_write(struct file* file,const char __user * buf, size_t count, loff_t* offset){
 	size_t bytes;
+	if(mutex_lock_interruptible(&buffer_lock)){
+		return -ERESTARTSYS;
+	}
 	bytes = min(count, (size_t) BUFFER_SIZE);
 	if(copy_from_user(buffer,buf,bytes)){
+		mutex_unlock(&buffer_lock);
 		return -EFAULT;
 	}
 	data_len = bytes;
+	mutex_unlock(&buffer_lock);
 	printk("Character device - write operation invoked by kernel \n");
 	return bytes;
 

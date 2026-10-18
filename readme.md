@@ -57,6 +57,11 @@ Writes string to the buffer in the kernel space.
 echo "hello world" | sudo tee /dev/char_device
 ```
 
+### Mutex lock
+
+For concurrent reads and writes, I have added protection using mutex
+locks.
+
 The future commits will address more character device driver features.
 
 ### Author
