@@ -5,7 +5,9 @@
 #include<linux/fs.h>
 #include<linux/device.h>
 #include<linux/mutex.h>
-
+#include<linux/types.h>
+#include<linux/ioctl.h>
+#include "char_driver_ioctl.h"
 #define BUFFER_SIZE 1024
 
 MODULE_AUTHOR("Manoj K M");
@@ -60,10 +62,39 @@ static ssize_t char_dev_write(struct file* file,const char __user * buf, size_t 
 
 }
 
+static  long char_dev_ioctl(struct file* file, unsigned int cmd, unsigned long arg){
+	__u32 len;
+	switch(cmd){
+		case CHAR_DEVICE_GET_LENGTH:{
+			if(mutex_lock_interruptible(&buffer_lock)){
+				return -ERESTARTSYS;
+			}
+			len = (__u32) data_len;
+			mutex_unlock(&buffer_lock);
+			if(copy_to_user((__u32 __user *) arg,&len,sizeof(len))){
+				return -EFAULT;
+			}
+			return 0;
+		}
+		case CHAR_DEVICE_CLEAR_BUFFER:{
+			if(mutex_lock_interruptible(&buffer_lock)){
+				return -ERESTARTSYS;
+			}			
+			memset(buffer,0,sizeof(buffer));
+			data_len = 0;
+			mutex_unlock(&buffer_lock);	
+			return 0;
+		}
+  		default:{
+			return -ENOTTY;
+		}
+	}
+}
 static struct file_operations fops = {
 	.open = char_dev_open,
 	.read = char_dev_read,	
 	.write = char_dev_write,
+	.unlocked_ioctl = char_dev_ioctl,
 };
 
 static struct class *char_dev_class;
